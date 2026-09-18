@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Language Translation Tool</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: #f2f2f2;
+        }
+
+        .container {
+            width: 95%;
+            max-width: 900px;
+            margin: 30px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 42px;
+            margin-bottom: 30px;
+            color: #111;
+        }
+
+        textarea {
+            width: 100%;
+            height: 160px;
+            padding: 12px;
+            font-size: 16px;
+            border: 1px solid #777;
+            border-radius: 3px;
+            resize: vertical;
+        }
+
+        textarea:focus {
+            outline: none;
+            border: 2px solid #333;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 18px;
+            margin-top: 24px;
+        }
+
+        select {
+            width: 140px;
+            padding: 12px;
+            font-size: 16px;
+            border: 1px solid #777;
+            background: white;
+            cursor: pointer;
+        }
+
+        button {
+            padding: 13px 28px;
+            font-size: 16px;
+            border: none;
+            background: blue;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #0000cc;
+        }
+
+        button:disabled {
+            background: #777;
+            cursor: not-allowed;
+        }
+
+        h2 {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 30px;
+        }
+
+        #result {
+            min-height: 48px;
+            padding: 15px;
+            margin-top: 20px;
+            background: #eeeeee;
+            font-size: 20px;
+            text-align: center;
+            word-wrap: break-word;
+        }
+
+        .error {
+            color: #cc0000;
+        }
+
+        .loading {
+            color: #555;
+        }
+
+        @media (max-width: 600px) {
+
+            h1 {
+                font-size: 30px;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+
+            select,
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>Language Translation Tool</h1>
+
+        <textarea
+            id="text"
+            placeholder="Enter text"></textarea>
+
+        <div class="controls">
+
+            <!-- Source language -->
+            <select id="source">
+                <option value="en">English</option>
+                <option value="te">Telugu</option>
+                <option value="hi">Hindi</option>
+                <option value="ta">Tamil</option>
+                <option value="kn">Kannada</option>
+                <option value="ml">Malayalam</option>
+                <option value="fr">French</option>
+                <option value="de">German</option>
+                <option value="es">Spanish</option>
+                <option value="it">Italian</option>
+                <option value="ja">Japanese</option>
+                <option value="ko">Korean</option>
+                <option value="zh-CN">Chinese</option>
+            </select>
+
+            <!-- Target language -->
+            <select id="target">
+                <option value="te">Telugu</option>
+                <option value="en">English</option>
+                <option value="hi">Hindi</option>
+                <option value="ta">Tamil</option>
+                <option value="kn">Kannada</option>
+                <option value="ml">Malayalam</option>
+                <option value="fr">French</option>
+                <option value="de">German</option>
+                <option value="es">Spanish</option>
+                <option value="it">Italian</option>
+                <option value="ja">Japanese</option>
+                <option value="ko">Korean</option>
+                <option value="zh-CN">Chinese</option>
+            </select>
+
+            <button id="translateBtn" onclick="translateText()">
+                Translate
+            </button>
+
+        </div>
+
+        <h2>Translated Text:</h2>
+
+        <div id="result">
+            Translation will appear here.
+        </div>
+
+    </div>
+
+
+    <script>
+
+        async function translateText() {
+
+            const text = document.getElementById("text").value.trim();
+            const source = document.getElementById("source").value;
+            const target = document.getElementById("target").value;
+
+            const result = document.getElementById("result");
+            const button = document.getElementById("translateBtn");
+
+
+            // Check empty text
+            if (!text) {
+
+                result.innerHTML =
+                    '<span class="error">Please enter some text.</span>';
+
+                return;
+            }
+
+
+            // Prevent same language translation
+            if (source === target) {
+
+                result.innerHTML = text;
+
+                return;
+            }
+
+
+            // Loading
+            result.innerHTML =
+                '<span class="loading">Translating...</span>';
+
+            button.disabled = true;
+
+
+            try {
+
+                const response = await fetch("/translate", {
+
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        text: text,
+                        source: source,
+                        target: target
+                    })
+
+                });
+
+
+                const data = await response.json();
+
+
+                if (data.success) {
+
+                    result.innerText = data.translation;
+
+                } else {
+
+                    result.innerHTML =
+                        '<span class="error">' +
+                        "Translation failed: " +
+                        data.error +
+                        "</span>";
+
+                }
+
+            }
+
+            catch (error) {
+
+                console.error(error);
+
+                result.innerHTML =
+                    '<span class="error">' +
+                    "Translation failed. Please try again." +
+                    "</span>";
+
+            }
+
+            finally {
+
+                button.disabled = false;
+
+            }
+
+        }
+
+    </script>
+
+</body>
+
+</html>
